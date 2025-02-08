@@ -11,19 +11,22 @@ export default [
       parserOptions: {
         project: true,
         ecmaVersion: "latest",
-        sourceType: "module"
-      }
+        sourceType: "module",
+      },
     },
     plugins: {
-      "@typescript-eslint": tseslint.plugin
+      "@typescript-eslint": tseslint.plugin,
     },
     rules: {
       "no-unused-vars": "off", // Turn off base rule
       "@typescript-eslint/no-unused-vars": "error", // Use TypeScript-specific rule instead
-      "prefer-const": ["error", {
-        ignoreReadBeforeAssign: true
-      }]
-    }
+      "prefer-const": [
+        "error",
+        {
+          ignoreReadBeforeAssign: true,
+        },
+      ],
+    },
   },
-  ...tseslint.configs.recommended
+  ...tseslint.configs.recommended,
 ];

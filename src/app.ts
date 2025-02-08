@@ -5,11 +5,10 @@ const app = express();
 
 const port = env.PORT;
 
-app.use('/healthcheck', (req: Request, res: Response) => {
-    res.send("الصحه حديد")
-})
-
+app.use("/healthcheck", (req: Request, res: Response) => {
+    res.send("الصحه حديد");
+});
 
 app.listen(port, () => {
-    console.log(`Server running in port ${port}`)
-})
+    console.log(`Server running in port ${port}`);
+});
