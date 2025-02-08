@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MovieLanguage {
+  ENGLISH
+  ARABIC
+  FRENCH
+}
+
+enum MovieSubtitle {
+  ENGLISH
+  ARABIC
+  FRENCH
+}
+
+model Customer {
+  id          String        @id @unique @default(uuid())
+  name        String
+  email       String        @unique
+  dateOfBirth DateTime
+  phone       String        @unique
+  password    String
+  Reservation Reservation[]
+}
+
+model Movie {
+  id          String        @id @unique @default(uuid())
+  name        String        @unique
+  genre       String
+  description String
+  duration    String
+  year        String
+  rate        Decimal
+  image       String?
+  language    MovieLanguage @default(ENGLISH)
+  subtitles   MovieSubtitle @default(ARABIC)
+  showTimes   DateTime
+  Party       Party[]
+}
+
+model Party {
+  id          String        @id @unique @default(uuid())
+  startTime   DateTime
+  endTime     DateTime
+  movie       Movie         @relation(references: [id], fields: [movieId])
+  movieId     String
+  hall        Hall          @relation(references: [id], fields: [hallId])
+  hallId      String
+  Reservation Reservation[]
+}
+
+model Hall {
+  id    String  @id @unique
+  Party Party[]
+  Seat  Seat[]
+}
+
+model Seat {
+  id          String        @id @unique
+  line        Int
+  hall        Hall          @relation(references: [id], fields: [hallId])
+  hallId      String
+  Reservation Reservation[]
+}
+
+model Reservation {
+  id         String   @id @unique @default(uuid())
+  customer   Customer @relation(references: [id], fields: [customerId])
+  customerId String
+  seat       Seat     @relation(references: [id], fields: [seatId])
+  seatId     String
+  party      Party    @relation(references: [id], fields: [partyId])
+  partyId    String
+
+  @@index([seatId, partyId])
+}
