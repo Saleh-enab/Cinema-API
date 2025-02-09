@@ -27,6 +27,8 @@ model Customer {
   phone       String        @unique
   password    String
   Reservation Reservation[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Movie {
@@ -36,12 +38,14 @@ model Movie {
   description String
   duration    String
   year        String
-  rate        Decimal
+  rate        Decimal       @default(0.0)
   image       String?
   language    MovieLanguage @default(ENGLISH)
   subtitles   MovieSubtitle @default(ARABIC)
   showTimes   DateTime
   Party       Party[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Party {
@@ -53,6 +57,8 @@ model Party {
   hall        Hall          @relation(references: [id], fields: [hallId])
   hallId      String
   Reservation Reservation[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Hall {
@@ -77,6 +83,8 @@ model Reservation {
   seatId     String
   party      Party    @relation(references: [id], fields: [partyId])
   partyId    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([seatId, partyId])
 }
