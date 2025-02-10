@@ -1,11 +1,11 @@
 import { logger } from './logger'
 import { CustomError } from "../types/customError";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
-export const errorHandler = (err: CustomError, req: Request, res: Response): void => {
+export const errorHandler = (err: CustomError, req: Request, res: Response, _next: NextFunction): void => {
     console.error(err);
     logger.error(err.message)
-    res.json({
+    res.status(err.status).json({
         status: err.status,
         message: err.message
     })
