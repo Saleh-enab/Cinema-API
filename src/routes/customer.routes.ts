@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { validate } from "../middlewares/validateResources";
 import { customerSchema } from "../schemas/customer.schema";
-import { createCustomer } from "../controllers/customer.controller";
+import { signUp, login } from "../controllers/customer.controller";
+import { loginSchema } from "../schemas/login.schema";
 
 export const customerRouter = Router();
 
-customerRouter.post('/signUp', validate(customerSchema), createCustomer)
+customerRouter.post('/sign-up', validate(customerSchema), signUp)
+
+customerRouter.post('/login', validate(loginSchema), login)
