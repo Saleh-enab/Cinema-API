@@ -23,7 +23,7 @@ model Customer {
   id          String        @id @unique @default(uuid())
   name        String
   email       String        @unique
-  dateOfBirth DateTime
+  dateOfBirth DateTime?
   phone       String        @unique
   password    String
   Reservation Reservation[]
