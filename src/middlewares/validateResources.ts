@@ -1,17 +1,16 @@
-import { AnyZodObject } from "zod";
+import { ZodTypeAny } from "zod";
 import { Request, Response, NextFunction } from "express";
 import { CustomError } from "../types/customError";
 
-export const validate = (schema: AnyZodObject) => (req: Request, res: Response, next: NextFunction) => {
-    try {
-        schema.parse({
-            body: req.body,
-            query: req.query,
-            params: req.params
-        })
-        next();
+export const validate = (schema: ZodTypeAny) => (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse({
+        body: req.body,
+        query: req.query,
+        params: req.params
+    })
+    if (!result.success) {
+        next(new CustomError(400, JSON.stringify(result.error.format())));
     }
-    catch (err: any) {
-        next(new CustomError(400, err.message));
-    }
+
+    next();
 }
