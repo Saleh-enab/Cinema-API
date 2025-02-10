@@ -1,9 +1,12 @@
-import { NextFunction, Request, Response } from "express";
 import db from "../db";
 import { CustomError } from "../types/customError";
-import { hashPassword } from "../middlewares/hashPassword";
+import { hashPassword, validatePassword } from "../middlewares/passwords";
+import { createAccessToken } from "../middlewares/tokens";
+import env from "../env";
+import { SignUpMiddleware } from "../schemas/customer.schema";
+import { LoginMiddleware } from "../schemas/login.schema";
 
-export const createCustomer = async (req: Request, res: Response, next: NextFunction) => {
+export const signUp: SignUpMiddleware = async (req, res, next) => {
     try {
         const { name, email, dateOfBirth, phone, password } = req.body;
         const hashedPassword = await hashPassword(password);
@@ -21,10 +24,48 @@ export const createCustomer = async (req: Request, res: Response, next: NextFunc
         res.sendStatus(201);
     }
     catch (err: unknown) {
-        if (err instanceof CustomError) {
-            next(new CustomError(500, err.message));
+        if (err instanceof Error) {
+            return next(new CustomError(500, err.message, "USER CREATION ERROR"));
         } else {
-            next(new CustomError(500, "An unknown error occurred"));
+            return next(new CustomError(500, "An unknown error occurred", "USER CREATION ERROR"));
         }
     }
 }
+
+export const login: LoginMiddleware = async (req, res, next) => {
+    const { email, password } = req.body;
+    try {
+        const customer = await db.customer.findUnique({ where: { email } });
+
+        if (!customer || !(await validatePassword(password, customer.password))) {
+            res.status(400).json({
+                validUser: false,
+                message: "Wrong email or password"
+            });
+            return
+        }
+
+        const accessToken = createAccessToken(
+            { id: customer.id, email: customer.email },
+            { expiresIn: env.ACCESS_TOKEN_TTL }
+        );
+
+        if (accessToken instanceof CustomError) {
+            return next(accessToken);
+        }
+
+        res.json({
+            validUser: true,
+            token: accessToken,
+            expiresIn: env.ACCESS_TOKEN_TTL
+        });
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            return next(new CustomError(500, err.message, "SERVER ERROR"))
+        } else {
+            return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"))
+        }
+    }
+
+
+};

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validate } from '../middlewares/validateResources';
 
 export const loginSchema = z.object({
     body: z.object({
@@ -7,4 +8,5 @@ export const loginSchema = z.object({
     })
 })
 
-export type loginValidator = z.infer<typeof loginSchema>
+export const loginValidator = validate(loginSchema)
+export type LoginMiddleware = typeof loginValidator

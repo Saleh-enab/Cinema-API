@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validate } from '../middlewares/validateResources';
 
 export const customerSchema = z.object({
     body: z.object({
@@ -15,3 +16,6 @@ export const customerSchema = z.object({
     message: "Passwords don't match",
     path: ["confirm"]
 })
+
+export const signUpValidator = validate(customerSchema)
+export type SignUpMiddleware = typeof signUpValidator
