@@ -12,7 +12,7 @@ app.use("/healthcheck", (req: Request, res: Response) => {
     res.send("الصحه حديد");
 });
 
-app.use('/customer', customerRouter)
+app.use('/customers', customerRouter)
 
 
 app.use(errorHandler)
