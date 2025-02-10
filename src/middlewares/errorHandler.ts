@@ -6,6 +6,7 @@ export const errorHandler = (err: CustomError, req: Request, res: Response, _nex
     console.error(err);
     logger.error(err.message)
     res.status(err.status).json({
+        errorType: err.type,
         status: err.status,
         message: err.message
     })
