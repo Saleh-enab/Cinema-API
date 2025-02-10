@@ -5,6 +5,7 @@ import { createAccessToken } from "../middlewares/tokens";
 import env from "../env";
 import { SignUpMiddleware } from "../schemas/customer.schema";
 import { LoginMiddleware } from "../schemas/login.schema";
+import { NextFunction, Request, Response } from "express";
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     try {
@@ -61,11 +62,31 @@ export const login: LoginMiddleware = async (req, res, next) => {
         });
     } catch (err: unknown) {
         if (err instanceof Error) {
-            return next(new CustomError(500, err.message, "SERVER ERROR"))
+            return next(new CustomError(500, err.message, "SERVER ERROR"));
         } else {
-            return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"))
+            return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"));
         }
     }
 
-
 };
+
+export const allCustomers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customers = await db.customer.findMany({
+            omit: {
+                password: true
+            }
+        })
+        res.json({
+            length: customers.length,
+            customers
+        })
+        return;
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            return next(new CustomError(500, err.message, "FETCHING ALL CUSTOMERS ERROR"));
+        } else {
+            return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"));
+        }
+    }
+}
