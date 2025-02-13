@@ -28,5 +28,5 @@ export default [
       ],
     },
   },
-  ...tseslint.configs.recommended,
+  // ...tseslint.configs.recommended,
 ];

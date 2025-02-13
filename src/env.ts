@@ -14,7 +14,9 @@ const envSchema = z.object({
         return /^\d+[smhdwy]$/.test(val as string);
     }),
     ACCESS_TOKEN_PUBLIC_KEY: z.string().startsWith("-----BEGIN PUBLIC KEY-----"),
-    ACCESS_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----")
+    ACCESS_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----"),
+    REFRESH_TOKEN_PUBLIC_KEY: z.string().startsWith("-----BEGIN PUBLIC KEY-----"),
+    REFRESH_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----")
 });
 
 const env = envSchema.parse(process.env);
