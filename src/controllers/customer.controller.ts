@@ -10,19 +10,31 @@ import { NextFunction, Request, Response } from "express";
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     try {
         const { name, email, dateOfBirth, phone, password } = req.body;
+        const oldCustomers = await db.customer.findUnique({
+            where: {
+                email
+            }
+        })
+        if (oldCustomers) {
+            throw new CustomError(400, "A customer with this email already exists.", "CLIENT ERROR")
+        }
         const hashedPassword = await hashPassword(password);
         const [day, month, year] = dateOfBirth.split("/").map(Number);
         const formattedDOB = new Date(`${year}-${month}-${day}`);
-        await db.customer.create({
+        const customer = await db.customer.create({
             data: {
                 name,
                 email,
                 dateOfBirth: formattedDOB,
                 phone,
                 password: hashedPassword
+            }, omit: {
+                password: true
             }
         })
-        res.sendStatus(201);
+        res.status(201).json({
+            customerData: customer
+        });
     }
     catch (err: unknown) {
         if (err instanceof Error) {
@@ -79,23 +91,43 @@ export const login: LoginMiddleware = async (req, res, next) => {
 
 };
 
-export const findAllCustomers = async (req: Request, res: Response, next: NextFunction) => {
+export const logout = (req: Request, res: Response) => {
+    res.clearCookie("refreshToken", { httpOnly: true });
+
+    res.json({
+        success: true,
+        message: "Logged out successfully"
+    });
+}
+
+export const getCustomerProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customers = await db.customer.findMany({
+        const customerId = req.params.id
+        const customer = await db.customer.findUnique({
+            where: {
+                id: customerId
+            },
             omit: {
-                password: true
+                password: true,
+                id: true,
             }
         })
+        if (!customer) {
+            throw new CustomError(400, "Invalid customer id", "CLIENT ERROR")
+        }
+        if (customerId !== req.customer.id) {
+            throw new CustomError(400, "You are not authorized to access this customer's data.", "AUTHORIZATION ERROR")
+        }
         res.json({
-            length: customers.length,
-            customers
+            customerData: customer
         })
-        return;
     } catch (err: unknown) {
         if (err instanceof Error) {
-            return next(new CustomError(500, err.message, "FETCHING ALL CUSTOMERS ERROR"));
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+            return;
         } else {
-            return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"));
+            next(new CustomError(500, "Customer profile fetching error", "SERVER ERROR"))
+            return;
         }
     }
 }
