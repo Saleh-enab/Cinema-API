@@ -1,6 +1,6 @@
 import z, { ZodEffects } from 'zod';
 import { Request, Response, NextFunction } from "express";
-import { CustomError } from "../types/customError";
+import { CustomError } from "../utils/customError";
 import { fromError } from "zod-validation-error";
 
 type ZodRequestSchema<B, Q, P> = z.ZodObject<{ body?: z.ZodSchema<B>, query?: z.ZodSchema<Q>, params?: z.ZodSchema<P> }>

@@ -1,4 +1,5 @@
 interface BasicError {
+    type: string;
     status: number;
     message: string;
 }
