@@ -1,7 +1,7 @@
 import db from "../db";
-import { CustomError } from "../types/customError";
+import { CustomError } from "../utils/customError";
 import { hashPassword, validatePassword } from "../middlewares/passwords";
-import { createAccessToken } from "../middlewares/tokens";
+import { createToken } from "../middlewares/tokens";
 import env from "../env";
 import { SignUpMiddleware } from "../schemas/customer.schema";
 import { LoginMiddleware } from "../schemas/login.schema";
@@ -46,19 +46,28 @@ export const login: LoginMiddleware = async (req, res, next) => {
             return
         }
 
-        const accessToken = createAccessToken(
+        const accessToken = createToken(
             { id: customer.id, email: customer.email },
+            "accessToken",
             { expiresIn: env.ACCESS_TOKEN_TTL }
         );
 
-        if (accessToken instanceof CustomError) {
-            return next(accessToken);
-        }
+        const refreshToken = createToken(
+            { id: customer.id, email: customer.email },
+            "refreshToken",
+            { expiresIn: env.REFRESH_TOKEN_TTL }
+        );
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true
+        })
 
         res.json({
             validUser: true,
-            token: accessToken,
-            expiresIn: env.ACCESS_TOKEN_TTL
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            accessTokenExpiresIn: env.ACCESS_TOKEN_TTL,
+            refreshTokenExpiresIn: env.REFRESH_TOKEN_TTL
         });
     } catch (err: unknown) {
         if (err instanceof Error) {
@@ -70,7 +79,7 @@ export const login: LoginMiddleware = async (req, res, next) => {
 
 };
 
-export const allCustomers = async (req: Request, res: Response, next: NextFunction) => {
+export const findAllCustomers = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customers = await db.customer.findMany({
             omit: {
