@@ -7,6 +7,8 @@ type StringValue = `${number}${'s' | 'm' | 'h' | 'd' | 'w' | 'y'}`;
 const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().url(),
+    EMAIL_APP_USER: z.string().email(),
+    EMAIL_APP_PASSWORD: z.string(),
     ACCESS_TOKEN_TTL: z.custom<StringValue>((val) => {
         return /^\d+[smhdwy]$/.test(val as string);
     }),

@@ -6,6 +6,8 @@ import env from "../env";
 import { SignUpMiddleware } from "../schemas/customer.schema";
 import { LoginMiddleware } from "../schemas/login.schema";
 import { NextFunction, Request, Response } from "express";
+import OTP from 'otp-generator';
+import { sendMail } from "../middlewares/sendMail";
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     try {
@@ -27,18 +29,26 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
                 email,
                 dateOfBirth: formattedDOB,
                 phone,
-                password: hashedPassword
+                password: hashedPassword,
+                OTP: OTP.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false }),
+                OTPExpiration: new Date(Date.now() + 10 * 60 * 1000)
             }, omit: {
                 password: true
             }
+        })
+        sendMail({
+            recipient: customer.email,
+            OTP: customer.OTP,
+            customerName: customer.name,
+            type: "emailVerification"
         })
         res.status(201).json({
             customerData: customer
         });
     }
     catch (err: unknown) {
-        if (err instanceof Error) {
-            return next(new CustomError(500, err.message, "USER CREATION ERROR"));
+        if (err instanceof CustomError) {
+            return next(new CustomError(err.status, err.message, "USER CREATION ERROR"));
         } else {
             return next(new CustomError(500, "An unknown error occurred", "USER CREATION ERROR"));
         }
@@ -98,6 +108,76 @@ export const logout = (req: Request, res: Response) => {
         success: true,
         message: "Logged out successfully"
     });
+}
+
+export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const mailOTP = req.body.OTP
+        const customerId = req.query.customerId as string
+        const customer = await db.customer.findUnique({
+            where: {
+                id: customerId
+            }
+        })
+        if (!customer) {
+            throw new CustomError(400, "Invalid customer ID", "EMAIL VERIFICATION ERROR")
+        }
+        const customerOTP = customer?.OTP
+        if (mailOTP === customerOTP && customer?.OTPExpiration && Date.now() < customer.OTPExpiration.getTime()) {
+            await db.customer.update({
+                where: { id: customer.id },
+                data: {
+                    veririfed: true,
+                    OTP: null,
+                    OTPExpiration: null,
+                },
+            });
+
+            res.status(200).json({ message: "Email has been verified successfully." })
+            return;
+        } else {
+            throw new CustomError(400, "Failed to verify the email", "EMAIL VERIFICATION ERROR")
+        }
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+        } else {
+            next(new CustomError(500, "Email verfification error", "SERVER ERROR"))
+        }
+    }
+
+}
+
+export const generateNewOTP = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = req.query.customerId as string
+        const customer = await db.customer.update({
+            where: { id: customerId },
+            data: {
+                OTP: OTP.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false }),
+                OTPExpiration: new Date(Date.now() + 10 * 60 * 1000)
+            }
+        })
+        sendMail({
+            recipient: customer.email,
+            OTP: customer.OTP,
+            customerName: customer.name,
+            type: "emailVerification"
+        })
+        res.status(200).json({
+            message: "New OTP has been sent successfully"
+        })
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+            return;
+        } else {
+            next(new CustomError(500, "New OTP generation error", "SERVER ERROR"))
+            return;
+        }
+    }
+
+
 }
 
 export const getCustomerProfile = async (req: Request, res: Response, next: NextFunction) => {
