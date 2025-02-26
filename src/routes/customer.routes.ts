@@ -1,28 +1,10 @@
 import { Router } from "express";
-import { validate } from "../middlewares/validateResources";
-import { customerSchema } from "../schemas/customer.schema";
-import { signUp, login, logout, getCustomerProfile, deleteCustomerProfile, verifyEmail, generateNewOTP, forgotPassword, resetPassword } from "../controllers/customer.controller";
-import { loginSchema } from "../schemas/login.schema";
-import { authorizeUser, generateNewToken } from "../middlewares/authorization";
+import { getCustomerProfile, deleteCustomerProfile } from "../controllers/customer.controller";
+import { authorizeUser } from "../middlewares/authorization";
+
 
 export const customerRouter = Router();
-
-customerRouter.post('/sign-up', validate(customerSchema), signUp)
-
-customerRouter.post('/login', validate(loginSchema), login)
-
-customerRouter.get('/logout', logout)
 
 customerRouter.get('/profile/:id', authorizeUser, getCustomerProfile)
 
 customerRouter.delete('/profile/:id', authorizeUser, deleteCustomerProfile)
-
-customerRouter.post('/token', generateNewToken)
-
-customerRouter.post('/verify', authorizeUser, verifyEmail)
-
-customerRouter.get('/resend-OTP', authorizeUser, generateNewOTP)
-
-customerRouter.post('/forgot-password', forgotPassword)
-
-customerRouter.post('/reset-password', resetPassword)
