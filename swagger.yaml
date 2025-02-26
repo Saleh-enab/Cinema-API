@@ -1,0 +1,202 @@
+openapi: 3.0.0
+info:
+  title: Cinema API
+  description: API for managing customers, authentication, and reservations in a cinema system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /customers/sign-up:
+    post:
+      summary: Register a new customer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerSignUp'
+      responses:
+        '201':
+          description: Customer created successfully
+        '400':
+          description: Email already exists
+
+  /customers/login:
+    post:
+      summary: Authenticate a customer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerLogin'
+      responses:
+        '200':
+          description: Login successful, returns tokens
+        '400':
+          description: Invalid email or password
+
+  /customers/logout:
+    get:
+      summary: Logout a customer
+      tags:
+        - Customers
+      responses:
+        '200':
+          description: Logout successful
+
+  /customers/profile/{customerId}:
+    get:
+      summary: Get customer profile
+      tags:
+        - Customers
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique ID of the customer
+      responses:
+        '200':
+          description: Returns customer profile
+        '400':
+          description: Invalid customer ID
+    delete:
+      summary: Delete customer profile
+      tags:
+        - Customers
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique ID of the customer
+      responses:
+        '200':
+          description: Customer deleted successfully
+        '400':
+          description: Unauthorized or invalid ID
+
+  /customers/token:
+    post:
+      summary: Generate new token
+      tags:
+        - Customers
+      responses:
+        '200':
+          description: Returns a new token
+
+  /customers/verify:
+    post:
+      summary: Verify customer email
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                OTP:
+                  type: string
+      responses:
+        '200':
+          description: Email verified successfully
+        '400':
+          description: Invalid OTP
+
+  /customers/resend-OTP:
+    get:
+      summary: Resend OTP for email verification
+      tags:
+        - Customers
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Email address to resend the OTP
+      responses:
+        '200':
+          description: OTP sent successfully
+        '400':
+          description: Invalid email
+
+  /customers/forgot-password:
+    post:
+      summary: Request password reset
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Password reset link sent
+        '400':
+          description: Customer not found
+
+  /customers/reset-password:
+    post:
+      summary: Reset customer password
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                passwordToken:
+                  type: string
+                email:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          description: Invalid or expired token
+
+components:
+  schemas:
+    CustomerSignUp:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        phone:
+          type: string
+        password:
+          type: string
+
+    CustomerLogin:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
