@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validate } from "../middlewares/validateResources";
 import { customerSchema } from "../schemas/customer.schema";
-import { signUp, login, logout, getCustomerProfile, deleteCustomerProfile, verifyEmail, generateNewOTP } from "../controllers/customer.controller";
+import { signUp, login, logout, getCustomerProfile, deleteCustomerProfile, verifyEmail, generateNewOTP, forgotPassword, resetPassword } from "../controllers/customer.controller";
 import { loginSchema } from "../schemas/login.schema";
 import { authorizeUser, generateNewToken } from "../middlewares/authorization";
 
@@ -21,4 +21,8 @@ customerRouter.post('/token', generateNewToken)
 
 customerRouter.post('/verify', authorizeUser, verifyEmail)
 
-customerRouter.get('/resendOTP', authorizeUser, generateNewOTP)
+customerRouter.get('/resend-OTP', authorizeUser, generateNewOTP)
+
+customerRouter.post('/forgot-password', forgotPassword)
+
+customerRouter.post('/reset-password', resetPassword)

@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import env from "../env";
 import { logger } from "./logger";
 
-export const sendMail = async ({ recipient, OTP, passwordToken, type, customerName }: MailTemplateOptions) => {
+export const sendMail = async ({ recipient, OTP, resetPasswordUrl, type, customerName }: MailTemplateOptions) => {
     let templateName: string;
 
     switch (type) {
@@ -22,7 +22,7 @@ export const sendMail = async ({ recipient, OTP, passwordToken, type, customerNa
     const emailVariables = new Map<string, string>([
         ["customerName", customerName || ""],
         ["OTP", OTP || ""],
-        ["passwordToken", passwordToken || ""],
+        ["resetPasswordUrl", resetPasswordUrl || ""],
     ]);
 
     if (templateName === "emailVerification" && OTP === "") {

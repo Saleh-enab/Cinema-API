@@ -8,6 +8,7 @@ import { LoginMiddleware } from "../schemas/login.schema";
 import { NextFunction, Request, Response } from "express";
 import OTP from 'otp-generator';
 import { sendMail } from "../middlewares/sendMail";
+import crypto from 'crypto';
 
 export const signUp: SignUpMiddleware = async (req, res, next) => {
     try {
@@ -36,7 +37,7 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
                 password: true
             }
         })
-        sendMail({
+        await sendMail({
             recipient: customer.email,
             OTP: customer.OTP,
             customerName: customer.name,
@@ -47,8 +48,8 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
         });
     }
     catch (err: unknown) {
-        if (err instanceof CustomError) {
-            return next(new CustomError(err.status, err.message, "USER CREATION ERROR"));
+        if (err instanceof Error) {
+            return next(new CustomError(500, err.message, "USER CREATION ERROR"));
         } else {
             return next(new CustomError(500, "An unknown error occurred", "USER CREATION ERROR"));
         }
@@ -127,7 +128,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
             await db.customer.update({
                 where: { id: customer.id },
                 data: {
-                    veririfed: true,
+                    verified: true,
                     OTP: null,
                     OTPExpiration: null,
                 },
@@ -240,6 +241,91 @@ export const deleteCustomerProfile = async (req: Request, res: Response, next: N
             return;
         } else {
             next(new CustomError(500, "Customer profile deletion error", "SERVER ERROR"))
+            return;
+        }
+    }
+}
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email } = req.body
+        const customer = await db.customer.findUnique({ where: { email } })
+        if (!customer) {
+            throw new CustomError(400, "Customer account not found", "CLIENT ERROR")
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        await db.customer.update({
+            where: { email },
+            data: {
+                resetPasswordToken: hashedToken,
+                resetPasswordExpiration: new Date(Date.now() + 10 * 60 * 1000)
+            }
+        })
+        const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}&email=${email}`;
+        await sendMail({
+            recipient: customer.email,
+            resetPasswordUrl: resetUrl,
+            customerName: customer.name,
+            type: "resetPassword"
+        })
+        res.status(200).json({
+            message: "Password reset link has been sent to your email"
+        })
+    } catch (err: unknown) {
+        if (err instanceof CustomError) {
+            next(new CustomError(err.status, err.message, "SERVER ERROR"))
+            return;
+        }
+        else if (err instanceof Error) {
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+            return;
+        } else {
+            next(new CustomError(500, "Forget password function error", "SERVER ERROR"))
+            return;
+        }
+    }
+}
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { passwordToken, email, newPassword } = req.body;
+        if (!passwordToken || !email || !newPassword) {
+            throw new CustomError(400, "Invalid request", "CLIENT ERROR")
+        }
+        const hashedToken = crypto.createHash('sha256').update(passwordToken).digest('hex');
+        const newHashedPassword = await hashPassword(newPassword);
+
+        const updatedCustomer = await db.customer.updateMany({
+            where: {
+                email,
+                resetPasswordToken: hashedToken,
+                resetPasswordExpiration: { gt: new Date() },
+            },
+            data: {
+                password: newHashedPassword,
+                resetPasswordExpiration: null,
+                resetPasswordToken: null,
+            },
+        });
+
+        if (updatedCustomer.count === 0) {
+            return next(new CustomError(400, "Invalid or expired token", "CLIENT ERROR"));
+        }
+        res.status(200).json({
+            message: "Password has been updated successfully"
+        })
+    } catch (err: unknown) {
+        if (err instanceof CustomError) {
+            next(new CustomError(err.status, err.message, "SERVER ERROR"))
+            return;
+        }
+        else if (err instanceof Error) {
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+            return;
+        } else {
+            next(new CustomError(500, "Forget password function error", "SERVER ERROR"))
             return;
         }
     }
