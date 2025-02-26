@@ -19,8 +19,14 @@ enum MovieSubtitle {
   FRENCH
 }
 
+enum UserRole {
+  BASIC
+  ADMIN
+}
+
 model Customer {
   id                      String        @id @unique @default(uuid())
+  role                    UserRole      @default(BASIC)
   name                    String
   email                   String        @unique
   dateOfBirth             DateTime?
