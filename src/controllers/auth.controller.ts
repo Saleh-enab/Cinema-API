@@ -150,7 +150,7 @@ export const login: LoginMiddleware = async (req, res, next) => {
         );
 
         const refreshToken = createToken(
-            { id: customer.id, email: customer.email },
+            { id: customer.id, email: customer.email, role: customer.role },
             "refreshToken",
             { expiresIn: env.REFRESH_TOKEN_TTL }
         );
@@ -213,7 +213,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
         })
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, "SERVER ERROR"))
+            next(new CustomError(err.status, err.message, err.type))
             return;
         }
         else if (err instanceof Error) {
@@ -256,14 +256,14 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         })
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, "SERVER ERROR"))
+            next(new CustomError(err.status, err.message, err.type))
             return;
         }
         else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
-            next(new CustomError(500, "Forget password function error", "SERVER ERROR"))
+            next(new CustomError(500, "Reset password function error", "SERVER ERROR"))
             return;
         }
     }

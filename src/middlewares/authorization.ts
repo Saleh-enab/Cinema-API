@@ -5,7 +5,7 @@ import env from "../env";
 import { JwtPayload } from "jsonwebtoken";
 import { logger } from "./logger";
 import { UserPayload } from "../types/userPayload";
-
+import { UserRole } from "@prisma/client";
 
 export const authorizeUser: RequestHandler = (req, res, next) => {
     const authHeader = req.headers['authorization']
@@ -42,8 +42,8 @@ export const generateNewToken = async (req: Request, res: Response, next: NextFu
             if (!refreshDecoded.verified) {
                 throw new CustomError(403, "Refresh token has been expired, Customer must login again.", "AUTHORIZATION ERROR")
             }
-            const { id, email } = refreshDecoded.data as JwtPayload
-            const newAccessToken = createToken({ id, email }, "accessToken", { expiresIn: env.ACCESS_TOKEN_TTL })
+            const { id, email, role } = refreshDecoded.data as JwtPayload
+            const newAccessToken = createToken({ id, email, role }, "accessToken", { expiresIn: env.ACCESS_TOKEN_TTL })
             res.setHeader("x-access-token", newAccessToken);
             req.accessToken = newAccessToken
             logger.info("New access token has been generated")
@@ -52,6 +52,10 @@ export const generateNewToken = async (req: Request, res: Response, next: NextFu
             })
             return;
         }
+        res.json({
+            message: "Access token still valid, try to logout first."
+        })
+        return;
 
     }
     catch (err) {
@@ -62,5 +66,25 @@ export const generateNewToken = async (req: Request, res: Response, next: NextFu
             next(new CustomError(500, "An unknown error has been occured", "SERVER ERROR"))
         }
     }
+}
 
+export const checkAdminRole = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (req.customer.role !== UserRole.ADMIN) {
+            throw (new CustomError(403, "Only admins can do this action", "AUTHORIZATION ERROR"))
+        }
+        next();
+    } catch (err: unknown) {
+        if (err instanceof CustomError) {
+            next(new CustomError(err.status, err.message, "AUTHORIZATION ERROR"))
+            return;
+        }
+        else if (err instanceof Error) {
+            next(new CustomError(500, err.message, "SERVER ERROR"))
+            return;
+        } else {
+            next(new CustomError(500, "An unknown error has been occured", "SERVER ERROR"))
+            return;
+        }
+    }
 }
