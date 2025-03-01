@@ -25,7 +25,10 @@ export const getCustomerProfile = async (req: Request, res: Response, next: Next
             customerData: customer
         })
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -34,6 +37,7 @@ export const getCustomerProfile = async (req: Request, res: Response, next: Next
         }
     }
 };
+
 export const deleteCustomerProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customerId = req.params.id
@@ -57,7 +61,10 @@ export const deleteCustomerProfile = async (req: Request, res: Response, next: N
             message: "Customer account has been deleted successfully"
         })
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -121,7 +128,10 @@ export const getAllMovies = async (req: Request, res: Response, next: NextFuncti
             count: formattedMovies.length
         });
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -186,7 +196,7 @@ export const getMovieById = async (req: Request, res: Response, next: NextFuncti
         });
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(500, err.message, "SERVER ERROR"))
+            next(err);
             return;
         } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
@@ -285,7 +295,7 @@ export const reserveParty = async (req: Request, res: Response, next: NextFuncti
         });
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(500, err.message, "SERVER ERROR"))
+            next(err);
             return;
         } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
@@ -339,7 +349,10 @@ export const getCustomerReservations = async (req: Request, res: Response, next:
             count: formattedReservations.length
         });
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {

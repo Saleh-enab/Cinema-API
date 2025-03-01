@@ -52,13 +52,16 @@ export const signUp: SignUpMiddleware = async (req, res, next) => {
         });
     }
     catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             return next(new CustomError(500, err.message, "USER CREATION ERROR"));
         } else {
             return next(new CustomError(500, "An unknown error occurred", "USER CREATION ERROR"));
         }
     }
-}
+};
 
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -89,14 +92,17 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
             throw new CustomError(400, "Failed to verify the email", "EMAIL VERIFICATION ERROR")
         }
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
         } else {
             next(new CustomError(500, "Email verfification error", "SERVER ERROR"))
         }
     }
 
-}
+};
 
 export const generateNewOTP = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -118,7 +124,10 @@ export const generateNewOTP = async (req: Request, res: Response, next: NextFunc
             message: "New OTP has been sent successfully"
         })
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -126,9 +135,7 @@ export const generateNewOTP = async (req: Request, res: Response, next: NextFunc
             return;
         }
     }
-
-
-}
+};
 
 export const login: LoginMiddleware = async (req, res, next) => {
     const { email, password } = req.body;
@@ -167,7 +174,10 @@ export const login: LoginMiddleware = async (req, res, next) => {
             refreshTokenExpiresIn: env.REFRESH_TOKEN_TTL
         });
     } catch (err: unknown) {
-        if (err instanceof Error) {
+        if (err instanceof CustomError) {
+            next(err);
+            return;
+        } else if (err instanceof Error) {
             return next(new CustomError(500, err.message, "SERVER ERROR"));
         } else {
             return next(new CustomError(500, "An unknown error occurred", "SERVER ERROR"));
@@ -213,10 +223,9 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
         })
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type))
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -224,7 +233,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
             return;
         }
     }
-}
+};
 
 export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -256,10 +265,9 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         })
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type))
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -267,4 +275,4 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
             return;
         }
     }
-}
+};

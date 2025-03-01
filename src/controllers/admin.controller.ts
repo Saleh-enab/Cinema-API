@@ -45,10 +45,9 @@ export const addMovie: CreateMovieMiddleware = async (req, res, next) => {
 
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type))
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"))
             return;
         } else {
@@ -99,10 +98,9 @@ export const updateMovie: UpdateMovieMiddleware = async (req, res, next) => {
 
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -132,10 +130,9 @@ export const deleteMovie = async (req: Request, res: Response, next: NextFunctio
         return;
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -159,10 +156,9 @@ export const addHall: AddHallMiddleware = async (req, res, next) => {
         })
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -192,10 +188,9 @@ export const deleteHall = async (req: Request, res: Response, next: NextFunction
         return;
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -279,10 +274,9 @@ export const createParty: CreatePartyMiddleware = async (req, res, next) => {
 
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -393,10 +387,9 @@ export const updateParty: UpdatePartyMiddleware = async (req, res, next) => {
 
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
@@ -442,10 +435,9 @@ export const deleteParty = async (req: Request, res: Response, next: NextFunctio
 
     } catch (err: unknown) {
         if (err instanceof CustomError) {
-            next(new CustomError(err.status, err.message, err.type));
+            next(err);
             return;
-        }
-        else if (err instanceof Error) {
+        } else if (err instanceof Error) {
             next(new CustomError(500, err.message, "SERVER ERROR"));
             return;
         } else {
