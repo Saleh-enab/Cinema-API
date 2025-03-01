@@ -8,11 +8,13 @@ import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import path from "path";
 import { authRouter } from "./routes/auth.routes";
+import { adminRouter } from "./routes/admin.routes";
 
 const app = express();
 const port = env.PORT;
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookireParser());
 const swaggerDocument = YAML.load(path.join(__dirname, "../swagger.yaml"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -23,8 +25,9 @@ app.use("/healthcheck", (req: Request, res: Response) => {
 
 app.use('/auth', authRouter)
 app.use('/customers', customerRouter)
+app.use('/admin', adminRouter)
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
-    next(new CustomError(400, "Invalid URL", "CLIENT ERROR"))
+    next(new CustomError(404, "Invalid URL", "CLIENT ERROR"))
     return;
 })
 
