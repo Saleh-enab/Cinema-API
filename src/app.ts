@@ -24,7 +24,7 @@ app.use("/healthcheck", (req: Request, res: Response) => {
 });
 
 app.use('/auth', authRouter)
-app.use('/customers', customerRouter)
+app.use('/customer', customerRouter)
 app.use('/admin', adminRouter)
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
     next(new CustomError(404, "Invalid URL", "CLIENT ERROR"))
