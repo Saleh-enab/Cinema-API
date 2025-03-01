@@ -8,97 +8,112 @@ servers:
     description: Local development server
 
 paths:
-  /customers/sign-up:
+  /auth/sign-up:
     post:
       summary: Register a new customer
       tags:
-        - Customers
+        - Authentication
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerSignUp'
+              $ref: "#/components/schemas/CustomerSignUp"
       responses:
-        '201':
+        "201":
           description: Customer created successfully
-        '400':
-          description: Email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerData:
+                    $ref: "#/components/schemas/CustomerResponse"
+        "400":
+          description: Invalid user input
 
-  /customers/login:
+  /auth/login:
     post:
       summary: Authenticate a customer
       tags:
-        - Customers
+        - Authentication
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerLogin'
+              $ref: "#/components/schemas/CustomerLogin"
       responses:
-        '200':
-          description: Login successful, returns tokens
-        '400':
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validUser:
+                    type: boolean
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  accessTokenExpiresIn:
+                    type: string
+                  refreshTokenExpiresIn:
+                    type: string
+        "400":
           description: Invalid email or password
 
-  /customers/logout:
+  /auth/logout:
     get:
       summary: Logout a customer
       tags:
-        - Customers
+        - Authentication
       responses:
-        '200':
+        "200":
           description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
 
-  /customers/profile/{customerId}:
-    get:
-      summary: Get customer profile
-      tags:
-        - Customers
-      parameters:
-        - name: customerId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Unique ID of the customer
-      responses:
-        '200':
-          description: Returns customer profile
-        '400':
-          description: Invalid customer ID
-    delete:
-      summary: Delete customer profile
-      tags:
-        - Customers
-      parameters:
-        - name: customerId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Unique ID of the customer
-      responses:
-        '200':
-          description: Customer deleted successfully
-        '400':
-          description: Unauthorized or invalid ID
-
-  /customers/token:
+  /auth/token:
     post:
-      summary: Generate new token
+      summary: Generate new access token using refresh token
       tags:
-        - Customers
+        - Authentication
       responses:
-        '200':
-          description: Returns a new token
+        "200":
+          description: Returns a new access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        "401":
+          description: Invalid refresh token
 
-  /customers/verify:
+  /auth/verify:
     post:
       summary: Verify customer email
       tags:
-        - Customers
+        - Authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID of customer to verify
       requestBody:
         required: true
         content:
@@ -108,35 +123,52 @@ paths:
               properties:
                 OTP:
                   type: string
+                  description: One-time password sent to email
       responses:
-        '200':
+        "200":
           description: Email verified successfully
-        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
           description: Invalid OTP
 
-  /customers/resend-OTP:
+  /auth/resend-OTP:
     get:
       summary: Resend OTP for email verification
       tags:
-        - Customers
+        - Authentication
+      security:
+        - bearerAuth: []
       parameters:
-        - name: email
+        - name: customerId
           in: query
           required: true
           schema:
             type: string
-          description: Email address to resend the OTP
+          description: Customer ID to resend OTP to
       responses:
-        '200':
+        "200":
           description: OTP sent successfully
-        '400':
-          description: Invalid email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Invalid customer ID
 
-  /customers/forgot-password:
+  /auth/forgot-password:
     post:
       summary: Request password reset
       tags:
-        - Customers
+        - Authentication
       requestBody:
         required: true
         content:
@@ -147,16 +179,23 @@ paths:
                 email:
                   type: string
       responses:
-        '200':
+        "200":
           description: Password reset link sent
-        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
           description: Customer not found
 
-  /customers/reset-password:
+  /auth/reset-password:
     post:
       summary: Reset customer password
       tags:
-        - Customers
+        - Authentication
       requestBody:
         required: true
         content:
@@ -171,14 +210,533 @@ paths:
                 newPassword:
                   type: string
       responses:
-        '200':
+        "200":
           description: Password reset successful
-        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
           description: Invalid or expired token
 
+  /customer/profile/{id}:
+    get:
+      summary: Get customer profile
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique ID of the customer
+      responses:
+        "200":
+          description: Returns customer profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerData:
+                    $ref: "#/components/schemas/CustomerResponse"
+        "400":
+          description: Invalid customer ID or unauthorized
+    delete:
+      summary: Delete customer profile
+      tags:
+        - Customers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique ID of the customer
+      responses:
+        "200":
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Unauthorized or invalid ID
+
+  /customer/movies:
+    get:
+      summary: Get all movies with optional name filter
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter movies by name (case insensitive)
+      responses:
+        "200":
+          description: Returns list of movies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movies:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MovieWithParties"
+                  count:
+                    type: integer
+        "500":
+          description: Error fetching movies
+
+  /customer/movies/{id}:
+    get:
+      summary: Get movie details by ID
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the movie
+      responses:
+        "200":
+          description: Returns movie details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movie:
+                    $ref: "#/components/schemas/MovieWithParties"
+        "404":
+          description: Movie not found
+
+  /customer/reservations:
+    post:
+      summary: Reserve a seat for a party
+      tags:
+        - Reservations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partyId:
+                  type: string
+                seatId:
+                  type: string
+      responses:
+        "201":
+          description: Seat reserved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  reservation:
+                    $ref: "#/components/schemas/ReservationResponse"
+        "400":
+          description: Invalid request or seat already reserved
+        "404":
+          description: Party or seat not found
+    get:
+      summary: Get all reservations for the authenticated customer
+      tags:
+        - Reservations
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Returns customer's reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reservations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReservationResponse"
+                  count:
+                    type: integer
+        "500":
+          description: Error fetching reservations
+
+  /customer/reservations/{reservationId}:
+    delete:
+      summary: Cancel a reservation
+      tags:
+        - Reservations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the reservation to cancel
+      responses:
+        "200":
+          description: Reservation cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Cannot cancel reservation close to party start time
+        "403":
+          description: Not authorized to cancel this reservation
+        "404":
+          description: Reservation not found
+
+  /customer/parties/{partyId}:
+    get:
+      summary: Get available seats for a party
+      tags:
+        - Parties
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: partyId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the party
+      responses:
+        "200":
+          description: Returns available seats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hallId:
+                    type: string
+                  availableSeats:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AvailableSeat"
+                  totalSeats:
+                    type: integer
+                  availableCount:
+                    type: integer
+        "404":
+          description: Party not found
+
+  /admin/movies:
+    post:
+      summary: Add a new movie
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                genre:
+                  type: string
+                description:
+                  type: string
+                duration:
+                  type: string
+                year:
+                  type: string
+                rate:
+                  type: number
+      responses:
+        "201":
+          description: Movie created successfully
+        "400":
+          description: Movie already exists
+        "401":
+          description: Unauthorized
+
+  /admin/movies/{id}:
+    put:
+      summary: Update a movie
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the movie to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                genre:
+                  type: string
+                description:
+                  type: string
+                duration:
+                  type: string
+                year:
+                  type: string
+                rate:
+                  type: number
+      responses:
+        "200":
+          description: Movie updated successfully
+        "404":
+          description: Movie not found
+        "401":
+          description: Unauthorized
+    delete:
+      summary: Delete a movie
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the movie to delete
+      responses:
+        "200":
+          description: Movie deleted successfully
+        "404":
+          description: Movie not found
+        "401":
+          description: Unauthorized
+
+  /admin/halls:
+    post:
+      summary: Add a new hall
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Hall created successfully
+        "401":
+          description: Unauthorized
+
+  /admin/halls/{id}:
+    delete:
+      summary: Delete a hall
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the hall to delete
+      responses:
+        "200":
+          description: Hall deleted successfully
+        "404":
+          description: Hall not found
+        "401":
+          description: Unauthorized
+
+  /admin/parties:
+    post:
+      summary: Create a new party
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                hallId:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                ticketPrice:
+                  type: number
+      responses:
+        "201":
+          description: Party created successfully
+        "400":
+          description: Invalid request data
+        "401":
+          description: Unauthorized
+
+  /admin/parties/{id}:
+    put:
+      summary: Update a party
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the party to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                movieId:
+                  type: string
+                hallId:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                ticketPrice:
+                  type: number
+      responses:
+        "200":
+          description: Party updated successfully
+        "404":
+          description: Party not found
+        "401":
+          description: Unauthorized
+    delete:
+      summary: Delete a party
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the party to delete
+      responses:
+        "200":
+          description: Party deleted successfully
+        "404":
+          description: Party not found
+        "401":
+          description: Unauthorized
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     CustomerSignUp:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+        - password
+        - confirmPassword
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        dateOfBirth:
+          type: string
+          format: date
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+
+    CustomerLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    CustomerResponse:
       type: object
       properties:
         name:
@@ -190,13 +748,87 @@ components:
           format: date
         phone:
           type: string
-        password:
+        verified:
+          type: boolean
+        createdAt:
           type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
-    CustomerLogin:
+    MovieWithParties:
       type: object
       properties:
-        email:
+        id:
           type: string
-        password:
+        name:
+          type: string
+        genre:
+          type: string
+        description:
+          type: string
+        duration:
+          type: string
+        year:
+          type: string
+        rate:
+          type: number
+        image:
+          type: string
+        availableParties:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              startTime:
+                type: string
+                format: date-time
+              endTime:
+                type: string
+                format: date-time
+              ticketPrice:
+                type: number
+              hallId:
+                type: string
+              hallName:
+                type: string
+
+    ReservationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        movieName:
+          type: string
+        movieImage:
+          type: string
+        hallName:
+          type: string
+        seat:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        ticketPrice:
+          type: number
+        reservedAt:
+          type: string
+          format: date-time
+
+    AvailableSeat:
+      type: object
+      properties:
+        id:
+          type: string
+        row:
+          type: string
+        seatNumber:
+          type: integer
+        display:
           type: string
