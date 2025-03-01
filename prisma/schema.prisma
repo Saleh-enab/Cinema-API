@@ -53,7 +53,6 @@ model Movie {
   image       String?
   language    MovieLanguage @default(ENGLISH)
   subtitles   MovieSubtitle @default(ARABIC)
-  showTimes   DateTime
   Party       Party[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -63,6 +62,7 @@ model Party {
   id          String        @id @unique @default(uuid())
   startTime   DateTime
   endTime     DateTime
+  ticketPrice Decimal       @default(80.0)
   movie       Movie         @relation(references: [id], fields: [movieId])
   movieId     String
   hall        Hall          @relation(references: [id], fields: [hallId])
@@ -80,7 +80,8 @@ model Hall {
 
 model Seat {
   id          String        @id @unique
-  line        Int
+  row         String        @db.Char(1)
+  seatNumber  Int
   hall        Hall          @relation(references: [id], fields: [hallId])
   hallId      String
   Reservation Reservation[]
