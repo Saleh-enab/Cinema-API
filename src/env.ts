@@ -18,7 +18,10 @@ const envSchema = z.object({
     ACCESS_TOKEN_PUBLIC_KEY: z.string().startsWith("-----BEGIN PUBLIC KEY-----"),
     ACCESS_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----"),
     REFRESH_TOKEN_PUBLIC_KEY: z.string().startsWith("-----BEGIN PUBLIC KEY-----"),
-    REFRESH_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----")
+    REFRESH_TOKEN_PRIVATE_KEY: z.string().startsWith("-----BEGIN RSA PRIVATE KEY-----"),
+    CLOUDINARY_NAME: z.string(),
+    CLOUDINARY_API_KEY: z.string(),
+    CLOUDINARY_API_SECRET: z.string()
 });
 
 const env = envSchema.parse(process.env);
